@@ -4,10 +4,15 @@
 <style>
     .game {
         display: inline-block;
+        user-select: none;
     }
 
     #score_widget {
         float:right;
+    }
+
+    #bot.running {
+        background-color:orange;
     }
 
     .title {
@@ -52,6 +57,13 @@
 
     .blank {
         background-color:hsl(30,6%,73%);
+    }
+
+    .button:hover {
+        color: white;
+    }
+    .button:active {
+        background-color: orange;
     }
 
 /* #eaebd9 through #de9100 through #fb2d0f*/
@@ -111,6 +123,7 @@
         <div class='game'>
             <div class='top'>
                 <div class='title'>2048</div>
+                <div class='widget button' id='bot'>bot</div>
                 <div class='widget' id='score_widget'> SCORE <div class='data' id='score'></div></div>
             </div>
             <div id='board'></div>
@@ -140,7 +153,7 @@
 
             // moves if possible, returns true if no more operations possible
             // on destination
-            this.move = function(dest_y, dest_x, src_y, src_x) {
+            this.move = function(dest_y, dest_x, src_y, src_x, execute) {
                 if(me.tiles[src_y][src_x] == blank){
                     return false;
                 }
@@ -320,6 +333,45 @@
             show_board();
         }
 
+
+        var bot_timeout_handle = false;
+        var run_bot = function() {
+            var n_move = Math.floor(Math.random()*4.);
+            switch(n_move) {
+                case 0: 
+                    move_right();
+                    break;
+                case 1:
+                    move_left()
+                    break;
+                case 2:
+                    move_up();
+                    break;
+                case 3:
+                    move_down();
+                    break;
+            }
+            move_right();
+            bot_timeout_handle = window.setTimeout(run_bot,1000);
+        }
+
+        var stop_bot = function() {
+            if(bot_timeout_handle) {
+                window.clearTimeout(bot_timeout_handle);
+            }
+            bot_timeout_handle = false;
+        }
+
+        var toggle_bot = function() {
+            var cl = e_bot_button.classList;
+            if (cl.contains('running')) {
+                cl.remove('running');
+            } else {
+                cl.add('running');
+                run_bot();
+            }
+        }
+
         var e_reset_button = document.getElementById('reset');
         e_reset_button.addEventListener("click",reset);
 
@@ -334,6 +386,9 @@
 
         var e_move_up_button = document.getElementById('move_up');
         e_move_up_button.addEventListener("click",move_up);
+
+        var e_bot_button = document.getElementById('bot');
+        e_bot_button.addEventListener("click", toggle_bot);
         
         var on_keydown = function(e) {
             //alert(e);
