@@ -1,48 +1,163 @@
 <html>
     <head>
+        <title>2048</title>
+<style>
+    .game {
+        display: inline-block;
+    }
+
+    #score_widget {
+        float:right;
+    }
+
+    .title {
+        display:inline-block;
+        font-size: 50px;
+        color: gray;
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    }
+    
+    .widget {
+        color:gainsboro;
+        background-color: gray;
+        display: inline-block;
+        border-radius: 8px;
+        padding:8px;
+        margin:4px;
+        text-align: center;
+        font-size:15px;
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    }
+    .data {
+        color:cornsilk;
+        font-size:20px;
+    }
+    .board {
+        background-color:gray;
+        border-radius: 8px;
+        border-collapse: separate;
+        border-spacing: 5px;
+        display:inline-block;
+    }
+    
+    .tile {
+        width: 70px;
+        background-color:lightgray;
+        height: 70px;
+        text-align: center;
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        font-size: 30px;
+        border-radius: 8px;
+    }
+
+    .blank {
+        background-color:hsl(30,6%,73%);
+    }
+
+/* #eaebd9 through #de9100 through #fb2d0f*/
+    .tile2 {
+        background-color: #eaebd9;
+        color: #505050;
+    }
+    .tile4 {
+        background-color: #e1ddb4;
+        color: #505050;
+    }
+    .tile8 {
+        background-color: #dcce8f;
+        color: #505050;
+    }
+    .tile16 {
+        background-color: #dbbe6a;
+        color: #505050;
+    }
+    .tile32 {
+        background-color: #dbac45;
+        color:cornsilk;
+    }
+    .tile64 {
+        background-color: #de9e30;
+        color:cornsilk;
+    }
+    .tile128 {
+        background-color: #e28f1b;
+        color:cornsilk;
+    }
+    .tile256 {
+        background-color: #e67f00;
+        color:cornsilk;
+    }
+    .tile512 {
+        background-color: #ec7000;
+        color:cornsilk;
+    }
+    .tile1024 {
+        background-color: #f15f00;
+        color:cornsilk;
+    }
+    .tile2048 {
+        background-color: #f64b02;
+        color:cornsilk;
+    }
+    .tile4096 {
+        background-color: #fb2d0f;
+        color:cornsilk;
+    }
+
+</style>
 
     </head>
     <body>
-        <p>Hello</p>
-        <div id='board'></div>
-        <button id = 'reset'>reset</button>
-        <button id = 'move_left'>left</button>
-        <button id = 'move_right'>right</button>
-        <button id = 'move_down'>down</button>
-        <button id = 'move_up'>up</button>
+        <div class='game'>
+            <div class='top'>
+                <div class='title'>2048</div>
+                <div class='widget' id='score_widget'> SCORE <div class='data' id='score'></div></div>
+            </div>
+            <div id='board'></div>
+            <div class='widget button' id = 'move_left'>left</div>
+            <div class='widget button' id = 'move_right'>right</div>
+            <div class='widget button' id = 'move_down'>down</div>
+            <div class='widget button' id = 'move_up'>up</div>
+            <div class='widget button' id='reset'>reset</div>
+
     </body>
     <script>
         function Board() {
             var me = this;
+            const blank = '';
 
             this.reset = function() {
+                me.score = 0;
                 me.tiles = new Array(4);
                 for(var y=0; y < 4; ++y) {
                     me.tiles[y]=new Array(4);
                     for(var x=0; x< 4; ++x){
-                        me.tiles[y][x] = 0;
+                        me.tiles[y][x] = blank;
                     }
                 }
                 me.add_random()
             }
 
-            // moves if possible, returns true if move done
+            // moves if possible, returns true if no more operations possible
+            // on destination
             this.move = function(dest_y, dest_x, src_y, src_x) {
-                // find non-blank to left destination
-                if(me.tiles[src_y][src_x] != 0) {
-                    // move to blank if destination is blank
-                    if(me.tiles[dest_y][dest_x] == 0) {
-                        me.tiles[dest_y][dest_x] = me.tiles[src_y][src_x];
-                        me.tiles[src_y][src_x] = 0;
-                    }
-                    // add to destination if same
-                    else if(me.tiles[dest_y][dest_x] == me.tiles[src_y][src_x]) {
-                        me.tiles[dest_y][dest_x] = me.tiles[dest_y][dest_x] + me.tiles[src_y][src_x];
-                        me.tiles[src_y][src_x] = 0; 
-                    }
+                if(me.tiles[src_y][src_x] == blank){
+                    return false;
+                }
+                // move to blank if destination is blank
+                if(me.tiles[dest_y][dest_x] == blank) {
+                    me.tiles[dest_y][dest_x] = me.tiles[src_y][src_x];
+                    me.tiles[src_y][src_x] = blank;
+                    return false;
+                }
+
+                if(me.tiles[dest_y][dest_x] == me.tiles[src_y][src_x]) {
+                    me.tiles[dest_y][dest_x] = me.tiles[dest_y][dest_x] + me.tiles[src_y][src_x];
+                    me.tiles[src_y][src_x] = blank; 
+                    me.score += me.tiles[dest_y][dest_x];
                     return true;
                 }
-                return false;
+                return true;
             }
 
             this.move_right = function() {
@@ -55,7 +170,6 @@
                             }
                         }
                     }
-
                 }
             }
 
@@ -97,7 +211,6 @@
                             }
                         }
                     }
-
                 }
             }
 
@@ -147,11 +260,14 @@
 
             this.create_element = function() {
                 var table = document.createElement("table");
+                table.classList.add('board');
                 for(var y=0; y<4; y++) {
                     var tr = document.createElement("tr");
                       for(var x=0; x<4; x++) {
                           var td = document.createElement("td");
                           td.innerHTML=String(me.tiles[y][x]);
+                          td.classList.add('tile');
+                          td.classList.add('tile'+String(me.tiles[y][x]));
                           tr.appendChild(td);
                       }
                       table.appendChild(tr);
@@ -168,6 +284,7 @@
         var e_board = document.getElementById('board');
 
         var show_board = function() {
+            document.getElementById('score').innerText = String(board.score);
             e_board.innerHTML = "";
             e_board.appendChild(board.create_element());
         }
