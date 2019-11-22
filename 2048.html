@@ -1,0 +1,237 @@
+<html>
+    <head>
+
+    </head>
+    <body>
+        <p>Hello</p>
+        <div id='board'></div>
+        <button id = 'reset'>reset</button>
+        <button id = 'move_left'>left</button>
+        <button id = 'move_right'>right</button>
+        <button id = 'move_down'>down</button>
+        <button id = 'move_up'>up</button>
+    </body>
+    <script>
+        function Board() {
+            var me = this;
+
+            this.reset = function() {
+                me.tiles = new Array(4);
+                for(var y=0; y < 4; ++y) {
+                    me.tiles[y]=new Array(4);
+                    for(var x=0; x< 4; ++x){
+                        me.tiles[y][x] = 0;
+                    }
+                }
+                me.add_random()
+            }
+
+            // moves if possible, returns true if move done
+            this.move = function(dest_y, dest_x, src_y, src_x) {
+                // find non-blank to left destination
+                if(me.tiles[src_y][src_x] != 0) {
+                    // move to blank if destination is blank
+                    if(me.tiles[dest_y][dest_x] == 0) {
+                        me.tiles[dest_y][dest_x] = me.tiles[src_y][src_x];
+                        me.tiles[src_y][src_x] = 0;
+                    }
+                    // add to destination if same
+                    else if(me.tiles[dest_y][dest_x] == me.tiles[src_y][src_x]) {
+                        me.tiles[dest_y][dest_x] = me.tiles[dest_y][dest_x] + me.tiles[src_y][src_x];
+                        me.tiles[src_y][src_x] = 0; 
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            this.move_right = function() {
+                for(var y = 0; y<4; y++) {
+                    for(var dest_x=3; dest_x>0; --dest_x) {
+                        for(var src_x = dest_x-1; src_x >= 0; src_x--) 
+                        {
+                            if(me.move(y,dest_x,y,src_x)) {
+                                break;
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            this.move_left = function() {
+                for(var y = 0; y<4; y++) {
+                    for(var dest_x=0; dest_x<=2; ++dest_x) {
+                        for(var src_x = dest_x+1; src_x <= 3; src_x++) 
+                        {
+                            if(me.move(y,dest_x,y,src_x)) {
+                                break;
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            this.move_down = function() {
+                for(var x = 0; x<4; x++) {
+                    for(var dest_y=3; dest_y>0; --dest_y) {
+                        for(var src_y = dest_y-1; src_y >= 0; --src_y) 
+                        {
+                            if(me.move(dest_y,x,src_y,x)) {
+                                break;
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            this.move_up = function() {
+                for(var x = 0; x<4; ++x) {
+                    for(var dest_y=0; dest_y<=3; ++dest_y) {
+                        for(var src_y = dest_y+1; src_y <= 3; ++src_y) 
+                        {
+                            if(me.move(dest_y,x,src_y,x)) {
+                                break;
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            this.add_random = function() {
+                // get number of blanks
+                var n_blanks = 0;
+                for(var y=0; y<4; y++) {
+                    for(var x = 0; x < 4; x++) {
+                        if(me.tiles[y][x]==0) {
+                            ++n_blanks;
+                        }
+                    }
+                }
+                // pick random blank
+                var n_picked = Math.floor(Math.random()*n_blanks);
+                var n_blank = -1;
+                var x_picked = -1;
+                var y_picked = -1;
+                var found = false;
+                for(var y=0; y<4 &&  !found; y++) {
+                    for(var x = 0; x < 4 && !found; x++) {
+                        if(me.tiles[y][x]==0) {
+                            n_blank++;
+                            if(n_blank == n_picked) {
+                                y_picked = y;
+                                x_picked = x;
+                                found = true;
+                            }
+                        }
+                    }
+                }
+                if(!found) {
+                    throw("no empty space left to put a random tile");
+                }
+
+                // pick number 2 or 4
+                var random_picked = Math.random() < 0.5 ? 2 : 4;
+
+                // place number in random blank
+                me.tiles[y_picked][x_picked] = random_picked;
+
+            }
+
+            this.log = function() {
+                console.log("hello");
+            }
+
+            this.create_element = function() {
+                var table = document.createElement("table");
+                for(var y=0; y<4; y++) {
+                    var tr = document.createElement("tr");
+                      for(var x=0; x<4; x++) {
+                          var td = document.createElement("td");
+                          td.innerHTML=String(me.tiles[y][x]);
+                          tr.appendChild(td);
+                      }
+                      table.appendChild(tr);
+                }
+                return table;
+            }
+            me.reset();
+            return this;
+        }
+
+        var board = new Board();
+        board.log();
+
+        var e_board = document.getElementById('board');
+
+        var show_board = function() {
+            e_board.innerHTML = "";
+            e_board.appendChild(board.create_element());
+        }
+
+        show_board();
+
+        var reset = function() {
+            board.reset();
+            show_board();
+        }
+
+        var move_right = function() {
+            board.move_right();
+            board.add_random();
+            show_board();
+        }
+
+        var move_left = function() {
+            board.move_left();
+            board.add_random();
+            show_board();
+        }
+
+        var move_down = function() {
+            board.move_down();
+            board.add_random();
+            show_board();
+        }
+
+        var move_up = function() {
+            board.move_up();
+            board.add_random();
+            show_board();
+        }
+
+        var e_reset_button = document.getElementById('reset');
+        e_reset_button.addEventListener("click",reset);
+
+        var e_move_right_button = document.getElementById('move_right');
+        e_move_right_button.addEventListener("click",move_right);
+
+        var e_move_left_button = document.getElementById('move_left');
+        e_move_left_button.addEventListener("click",move_left);
+
+        var e_move_down_button = document.getElementById('move_down');
+        e_move_down_button.addEventListener("click",move_down);
+
+        var e_move_up_button = document.getElementById('move_up');
+        e_move_up_button.addEventListener("click",move_up);
+        
+        var on_keydown = function(e) {
+            //alert(e);
+            if(e.key=="ArrowLeft") {
+                move_left()
+            } else if (e.key=="ArrowRight") {
+                move_right();
+            } else if (e.key=="ArrowUp") {
+                move_up();
+            } else if (e.key=="ArrowDown") {
+                move_down();
+            }
+        }
+
+        window.addEventListener("keydown", on_keydown);
+        
+    </script>
+</html>
