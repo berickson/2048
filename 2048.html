@@ -258,7 +258,7 @@
                 let move_available = false;
                 execute = default_parameter(execute, true);
                 for(var x = 0; x<4; ++x) {
-                    for(var dest_y=0; dest_y<=3; ++dest_y) {
+                    for(var dest_y=0; dest_y<=2; ++dest_y) {
                         for(var src_y = dest_y+1; src_y <= 3; ++src_y) 
                         {
                             let rv = me.move(dest_y,x,src_y,x,execute);
