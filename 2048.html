@@ -5,6 +5,7 @@
     .game {
         display: inline-block;
         user-select: none;
+        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     }
 
     #score_widget {
@@ -19,7 +20,6 @@
         display:inline-block;
         font-size: 50px;
         color: gray;
-        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     }
     
     .widget {
@@ -31,8 +31,13 @@
         margin:4px;
         text-align: center;
         font-size:15px;
-        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     }
+
+    #game_over {
+        color:white;
+        background-color: red;
+    }
+
     .data {
         color:cornsilk;
         font-size:20px;
@@ -50,7 +55,6 @@
         background-color:lightgray;
         height: 70px;
         text-align: center;
-        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
         font-size: 30px;
         border-radius: 8px;
     }
@@ -124,6 +128,7 @@
             <div class='top'>
                 <div class='title'>2048</div>
                 <div class='widget button' id='bot'>bot</div>
+                <div class='widget game_over' id='game_over' style='visibility: hidden'>Game<br>Over</div>
                 <div class='widget' id='score_widget'> SCORE <div class='data' id='score'></div></div>
             </div>
             <div id='board'></div>
@@ -132,6 +137,7 @@
             <div class='widget button' id = 'move_down'>down</div>
             <div class='widget button' id = 'move_up'>up</div>
             <div class='widget button' id='reset'>reset</div>
+        </div>
 
     </body>
     <script>
@@ -151,80 +157,116 @@
                 me.add_random()
             }
 
+            function default_parameter(param,value){
+                return typeof param !== 'undefined' ? param : value;
+            }
+
             // moves if possible, returns true if no more operations possible
             // on destination
             this.move = function(dest_y, dest_x, src_y, src_x, execute) {
+                execute = default_parameter(execute, true);
+                var rv = {move_available:false, done:false};
+
+                execute = typeof test_only !== 'undefined' ? execute : true;
                 if(me.tiles[src_y][src_x] == blank){
-                    return false;
+                    return rv;
                 }
                 // move to blank if destination is blank
                 if(me.tiles[dest_y][dest_x] == blank) {
-                    me.tiles[dest_y][dest_x] = me.tiles[src_y][src_x];
-                    me.tiles[src_y][src_x] = blank;
-                    return false;
+                    rv.move_available = true;
+                    if(execute) {
+                        me.tiles[dest_y][dest_x] = me.tiles[src_y][src_x];
+                        me.tiles[src_y][src_x] = blank;
+                    }
+                    return rv;
                 }
 
                 if(me.tiles[dest_y][dest_x] == me.tiles[src_y][src_x]) {
-                    me.tiles[dest_y][dest_x] = me.tiles[dest_y][dest_x] + me.tiles[src_y][src_x];
-                    me.tiles[src_y][src_x] = blank; 
-                    me.score += me.tiles[dest_y][dest_x];
-                    return true;
+                    rv.move_available = true;
+                    rv.done = true;
+                    if(execute) {
+                        me.tiles[dest_y][dest_x] = me.tiles[dest_y][dest_x] + me.tiles[src_y][src_x];
+                        me.tiles[src_y][src_x] = blank; 
+                        me.score += me.tiles[dest_y][dest_x];
+                    }
+                    return rv;
                 }
-                return true;
+                rv.done = true;
+                return rv;
+                
             }
 
-            this.move_right = function() {
+            this.move_right = function(execute) {
+                let move_available = false;
+                execute = default_parameter(execute, true);
                 for(var y = 0; y<4; y++) {
                     for(var dest_x=3; dest_x>0; --dest_x) {
                         for(var src_x = dest_x-1; src_x >= 0; src_x--) 
                         {
-                            if(me.move(y,dest_x,y,src_x)) {
+                            var rv = me.move(y,dest_x,y,src_x);
+                            move_available = move_available || rv.move_available;
+                            if(rv.done) {
                                 break;
                             }
                         }
                     }
                 }
+                return move_available;
             }
 
-            this.move_left = function() {
+            this.move_left = function(execute) {
+                let move_available = false;
+                execute = default_parameter(execute, true);
                 for(var y = 0; y<4; y++) {
                     for(var dest_x=0; dest_x<=2; ++dest_x) {
                         for(var src_x = dest_x+1; src_x <= 3; src_x++) 
                         {
-                            if(me.move(y,dest_x,y,src_x)) {
+                            let rv = me.move(y,dest_x,y,src_x);
+                            move_available = move_available || rv.move_available;
+                            if(rv.done) {
                                 break;
                             }
                         }
                     }
 
                 }
+                return move_available;
             }
 
-            this.move_down = function() {
+            this.move_down = function(execute) {
+                let move_available = false;
+                execute = default_parameter(execute, true);
                 for(var x = 0; x<4; x++) {
                     for(var dest_y=3; dest_y>0; --dest_y) {
                         for(var src_y = dest_y-1; src_y >= 0; --src_y) 
                         {
-                            if(me.move(dest_y,x,src_y,x)) {
+                            let rv = me.move(dest_y,x,src_y,x);
+                            move_available = move_available || rv.move_available;
+                            if(rv.done) {
                                 break;
                             }
                         }
                     }
-
                 }
+                return move_available;
             }
 
-            this.move_up = function() {
+            this.move_up = function(execute) {
+                let move_available = false;
+                execute = default_parameter(execute, true);
                 for(var x = 0; x<4; ++x) {
                     for(var dest_y=0; dest_y<=3; ++dest_y) {
                         for(var src_y = dest_y+1; src_y <= 3; ++src_y) 
                         {
-                            if(me.move(dest_y,x,src_y,x)) {
+                            let rv = me.move(dest_y,x,src_y,x);
+                            move_available = move_available || rv.move_available;
+                            if(rv.done) {
                                 break;
                             }
                         }
                     }
                 }
+                return move_available;
             }
 
             this.add_random = function() {
@@ -304,55 +346,90 @@
 
         show_board();
 
+        var is_game_over = function() {
+            if( board.move_left(false) || board.move_right(false) || board.move_up(false) || board.move_down(false)) {
+                return false;
+            }
+            return true;
+        }
+
+        var check_game_over = function() {
+            if(is_game_over()) {
+                document.getElementById('game_over').style.visibility='visible';
+            } else {
+                document.getElementById('game_over').style.visibility='hidden';
+            }
+        }
+
         var reset = function() {
             board.reset();
             show_board();
+            check_game_over(); // remove game over sign
         }
 
         var move_right = function() {
-            board.move_right();
-            board.add_random();
+            let rv = board.move_right();
+            if(rv) board.add_random();
             show_board();
+            check_game_over();
+            return rv;
         }
 
         var move_left = function() {
-            board.move_left();
-            board.add_random();
+            let rv = board.move_left();
+            if(rv) board.add_random();
             show_board();
+            check_game_over();
+            return rv;
         }
 
         var move_down = function() {
-            board.move_down();
-            board.add_random();
+            let rv = board.move_down();
+            if(rv) board.add_random();
             show_board();
+            check_game_over();
+            return rv;
         }
 
         var move_up = function() {
-            board.move_up();
-            board.add_random();
+            let rv = board.move_up();
+            if(rv) board.add_random();
             show_board();
+            check_game_over();
+            return rv;
         }
 
 
         var bot_timeout_handle = false;
         var run_bot = function() {
-            var n_move = Math.floor(Math.random()*4.);
-            switch(n_move) {
-                case 0: 
-                    move_right();
-                    break;
-                case 1:
-                    move_left()
-                    break;
-                case 2:
-                    move_up();
-                    break;
-                case 3:
-                    move_down();
-                    break;
+            let move_result = undefined;
+            do {
+                var n_move = Math.floor(Math.random()*4.);
+                switch(n_move) {
+                    case 0: 
+                        move_result = move_right();
+                        break;
+                    case 1:
+                        move_result = move_left()
+                        break;
+                    case 2:
+                        move_result = move_up();
+                        break;
+                    case 3:
+                        move_result = move_down();
+                        break;
+                }
+            } while (!move_result && !is_game_over());
+
+            if(is_game_over()) {
+                stop_bot();
             }
-            move_right();
-            bot_timeout_handle = window.setTimeout(run_bot,1000);
+
+            if(e_bot_button.classList.contains('running')) {
+                bot_timeout_handle = window.setTimeout(run_bot, 100);
+            } else {
+                bot_timeout_handle = false;
+            }
         }
 
         var stop_bot = function() {
@@ -366,6 +443,7 @@
             var cl = e_bot_button.classList;
             if (cl.contains('running')) {
                 cl.remove('running');
+                stop_bot();
             } else {
                 cl.add('running');
                 run_bot();
