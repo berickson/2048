@@ -167,7 +167,6 @@
                 execute = default_parameter(execute, true);
                 var rv = {move_available:false, done:false};
 
-                execute = typeof test_only !== 'undefined' ? execute : true;
                 if(me.tiles[src_y][src_x] == blank){
                     return rv;
                 }
@@ -203,7 +202,7 @@
                     for(var dest_x=3; dest_x>0; --dest_x) {
                         for(var src_x = dest_x-1; src_x >= 0; src_x--) 
                         {
-                            var rv = me.move(y,dest_x,y,src_x);
+                            var rv = me.move(y,dest_x,y,src_x,execute);
                             move_available = move_available || rv.move_available;
                             if(rv.done) {
                                 break;
@@ -221,7 +220,7 @@
                     for(var dest_x=0; dest_x<=2; ++dest_x) {
                         for(var src_x = dest_x+1; src_x <= 3; src_x++) 
                         {
-                            let rv = me.move(y,dest_x,y,src_x);
+                            let rv = me.move(y,dest_x,y,src_x,execute);
                             move_available = move_available || rv.move_available;
                             if(rv.done) {
                                 break;
@@ -240,7 +239,7 @@
                     for(var dest_y=3; dest_y>0; --dest_y) {
                         for(var src_y = dest_y-1; src_y >= 0; --src_y) 
                         {
-                            let rv = me.move(dest_y,x,src_y,x);
+                            let rv = me.move(dest_y,x,src_y,x,execute);
                             move_available = move_available || rv.move_available;
                             if(rv.done) {
                                 break;
@@ -258,7 +257,7 @@
                     for(var dest_y=0; dest_y<=3; ++dest_y) {
                         for(var src_y = dest_y+1; src_y <= 3; ++src_y) 
                         {
-                            let rv = me.move(dest_y,x,src_y,x);
+                            let rv = me.move(dest_y,x,src_y,x,execute);
                             move_available = move_available || rv.move_available;
                             if(rv.done) {
                                 break;
@@ -309,10 +308,6 @@
 
             }
 
-            this.log = function() {
-                console.log("hello");
-            }
-
             this.create_element = function() {
                 var table = document.createElement("table");
                 table.classList.add('board');
@@ -334,7 +329,6 @@
         }
 
         var board = new Board();
-        board.log();
 
         var e_board = document.getElementById('board');
 
