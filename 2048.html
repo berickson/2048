@@ -475,7 +475,7 @@
             }
         }
 
-        var on_swipe = function(direction) {
+        var on_swipe = function(el, direction) {
             if(direction=="l") {
                 move_left()
             } else if (direction=="r") {
@@ -530,7 +530,7 @@
             }, false);
         }
 
-        detectswipe(getElementById(game), on_swipe);
+        detectswipe('game', on_swipe);
 
         
     </script>
