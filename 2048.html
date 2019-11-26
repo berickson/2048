@@ -165,6 +165,16 @@
                 return typeof param !== 'undefined' ? param : value;
             }
 
+            this.copy = function () {
+                let rv = new Board();
+                rv.score = me.score;
+                rv.tiles = new Array(4);
+                for(var y=0; y < 4; ++y) {
+                    rv.tiles[y]=me.tiles[y].slice();
+                }
+                return rv;
+            }
+
             // moves if possible, returns true if no more operations possible
             // on destination
             this.move = function(dest_y, dest_x, src_y, src_x, execute) {
@@ -328,9 +338,31 @@
                 }
                 return table;
             }
+
+            // moves by number 0=left; 1=right; 2=down; 3=up;
+            // returns true if move was ok
+            this.move_n = function(n_move) {
+                let move_result = undefined;
+                switch(n_move) {
+                    case 0: 
+                        move_result = me.move_left()
+                        break;
+                    case 1:
+                        move_result = me.move_right();
+                        break;
+                    case 2:
+                    move_result = me.move_down();
+                        break;
+                    case 3:
+                        move_result = me.move_up();
+                        break;
+                }
+                return move_result;
+            }
+
             me.reset();
             return this;
-        }
+        };// end of baord definition
 
         var board = new Board();
 
@@ -397,34 +429,50 @@
             return rv;
         }
 
+        var do_random_move = function() {
+            let move_result = undefined;
+            var n_move = Math.floor(Math.random()*4.);
+            return move(n_move);
+        }
+
+
+        var do_highest_scoring_move = function() {
+            console.log("in do_highest_scoring_move");
+            let highest_score = -1;
+            let n_best_move = 0;
+            for (let n_move = 0; n_move < 4; ++n_move) {
+                let test_board = board.copy();
+                if(test_board.move_n(n_move)) {
+                    if(test_board.score > highest_score) {
+                        highest_score = test_board.score;
+                        n_best_move = n_move;
+                    }
+                }
+            }
+            let rv = board.move_n(n_best_move);
+            board.add_random();
+            show_board();
+            check_game_over();
+            return rv;
+        }
+
 
         var bot_timeout_handle = false;
         var run_bot = function() {
             let move_result = undefined;
             do {
-                var n_move = Math.floor(Math.random()*4.);
-                switch(n_move) {
-                    case 0: 
-                        move_result = move_right();
-                        break;
-                    case 1:
-                        move_result = move_left()
-                        break;
-                    case 2:
-                        move_result = move_up();
-                        break;
-                    case 3:
-                        move_result = move_down();
-                        break;
-                }
+                //move_result = do_random_move();
+                move_result = do_highest_scoring_move();
             } while (!move_result && !is_game_over());
 
             if(is_game_over()) {
                 stop_bot();
             }
+            show_board();
+            check_game_over();
 
             if(e_bot_button.classList.contains('running')) {
-                bot_timeout_handle = window.setTimeout(run_bot, 100);
+                bot_timeout_handle = window.setTimeout(run_bot, 10);
             } else {
                 bot_timeout_handle = false;
             }
