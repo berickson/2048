@@ -183,6 +183,28 @@
                 return rv;
             }
 
+            this.blank_tiles = function * () {
+                for(let x=0;x<4;++x) {
+                    for( let y=0; y<4; ++y) {
+                        if(me.tiles[y][x]==blank) {
+                            yield {x:x,y:y};
+                        }
+                    }
+                }
+            }
+
+            // yields all possible random boards
+            this.random_possibilities = function * () {
+                for(const t of me.blank_tiles()) {
+                    for(let n=2; n<=4; n+=2) {
+                        let board = me.copy();
+                        board.tiles[t.y][t.x] = n;
+                        yield board;
+                    }
+
+                }
+            }
+
             // moves if possible, returns true if no more operations possible
             // on destination
             this.move = function(dest_y, dest_x, src_y, src_x, execute) {
@@ -288,6 +310,21 @@
                     }
                 }
                 return move_available;
+            }
+
+            this.get_highest_scoring_move = function() {
+                let highest_score = -1;
+                let n_best_move = 0;
+                for (let n_move = 0; n_move < 4; ++n_move) {
+                    let test_board = me.copy();
+                    if(test_board.move_n(n_move)) {
+                        if(test_board.score > highest_score) {
+                            highest_score = test_board.score;
+                            n_best_move = n_move;
+                        }
+                    }
+                }
+                return n_best_move;
             }
 
             // add a tile to a random empty spot
@@ -434,14 +471,12 @@
             return move_n(MoveDirection.Up);
         }
 
-        var do_random_move = function() {
-            let move_result = undefined;
-            var n_move = Math.floor(Math.random()*4.);
-            return move_n(n_move);
+        var get_random_move = function() {
+            return Math.floor(Math.random()*4.);
         }
 
 
-        var do_highest_scoring_move = function() {
+        var get_highest_scoring_move = function() {
             let highest_score = -1;
             let n_best_move = 0;
             for (let n_move = 0; n_move < 4; ++n_move) {
@@ -453,11 +488,34 @@
                     }
                 }
             }
-            let rv = board.move_n(n_best_move);
-            board.add_random();
-            show_board();
-            check_game_over();
-            return rv;
+            return n_best_move;
+        }
+
+        var get_best_two_deep_move = function() {
+            let best_move_1_move = 0;
+            let best_move_1_score = 0;
+            for(let n_move = 0; n_move < 4; ++n_move) {
+                let min_random_score = Number.MAX_VALUE;
+                let board1 = board.copy();
+                if(!board1.move_n(n_move)) {
+                    continue;
+                }
+                for(rand_board of board1.random_possibilities()) {
+                    if(!rand_board.move_n(rand_board.get_highest_scoring_move())) {
+                        continue;
+                    }
+
+                    if(rand_board.score < min_random_score) {
+                        min_random_score = rand_board.score;
+                    }
+                }
+                if(min_random_score > best_move_1_score) {
+                    best_move_1_score = min_random_score;
+                    best_move_1_move = n_move;
+                }
+            }
+            console.log('best move: '+best_move_1_move);
+            return best_move_1_move;
         }
 
 
@@ -465,15 +523,18 @@
         var run_bot = function() {
             let move_result = undefined;
             do {
-                //move_result = do_random_move();
-                move_result = do_highest_scoring_move();
+                //let n_move =  get_highest_scoring_move();
+                let n_move = get_best_two_deep_move();
+                //let n_move = get_random_move();
+                move_result = move_n(n_move);
+                
             } while (!move_result && !is_game_over());
 
             show_board();
             check_game_over();
 
             if(e_bot_button.classList.contains('running')) {
-                bot_timeout_handle = window.setTimeout(run_bot, 0);
+                bot_timeout_handle = window.setTimeout(run_bot, 10);
             } else {
                 bot_timeout_handle = false;
             }
