@@ -145,6 +145,14 @@
 
     </body>
     <script>
+
+        const MoveDirection = {
+            Left:0,
+            Right:1,
+            Down:2,
+            Up:3
+        };
+
         function Board() {
             var me = this;
             const blank = '';
@@ -282,6 +290,9 @@
                 return move_available;
             }
 
+            // add a tile to a random empty spot
+            // returns true on success, false if not
+            // spots available
             this.add_random = function() {
                 // get number of blanks
                 var n_blanks = 0;
@@ -310,8 +321,9 @@
                         }
                     }
                 }
+
                 if(!found) {
-                    throw("no empty space left to put a random tile");
+                    return false;
                 }
 
                 // pick number 2 or 4
@@ -319,6 +331,7 @@
 
                 // place number in random blank
                 me.tiles[y_picked][x_picked] = random_picked;
+                return true;
 
             }
 
@@ -344,16 +357,16 @@
             this.move_n = function(n_move) {
                 let move_result = undefined;
                 switch(n_move) {
-                    case 0: 
+                    case MoveDirection.Left: 
                         move_result = me.move_left()
                         break;
-                    case 1:
+                    case MoveDirection.Right:
                         move_result = me.move_right();
                         break;
-                    case 2:
+                    case MoveDirection.Down:
                     move_result = me.move_down();
                         break;
-                    case 3:
+                    case MoveDirection.Up:
                         move_result = me.move_up();
                         break;
                 }
@@ -362,7 +375,7 @@
 
             me.reset();
             return this;
-        };// end of baord definition
+        };// end of board definition
 
         var board = new Board();
 
@@ -397,47 +410,38 @@
             check_game_over(); // remove game over sign
         }
 
-        var move_right = function() {
-            let rv = board.move_right();
+        var move_n = function(direction) {
+            let rv = board.move_n(direction);
             if(rv) board.add_random();
             show_board();
             check_game_over();
             return rv;
+        }
+
+        var move_right = function() {
+            return move_n(MoveDirection.Right);
         }
 
         var move_left = function() {
-            let rv = board.move_left();
-            if(rv) board.add_random();
-            show_board();
-            check_game_over();
-            return rv;
+            return move_n(MoveDirection.Left);
         }
 
         var move_down = function() {
-            let rv = board.move_down();
-            if(rv) board.add_random();
-            show_board();
-            check_game_over();
-            return rv;
+            return move_n(MoveDirection.Down);
         }
 
         var move_up = function() {
-            let rv = board.move_up();
-            if(rv) board.add_random();
-            show_board();
-            check_game_over();
-            return rv;
+            return move_n(MoveDirection.Up);
         }
 
         var do_random_move = function() {
             let move_result = undefined;
             var n_move = Math.floor(Math.random()*4.);
-            return move(n_move);
+            return move_n(n_move);
         }
 
 
         var do_highest_scoring_move = function() {
-            console.log("in do_highest_scoring_move");
             let highest_score = -1;
             let n_best_move = 0;
             for (let n_move = 0; n_move < 4; ++n_move) {
@@ -465,14 +469,11 @@
                 move_result = do_highest_scoring_move();
             } while (!move_result && !is_game_over());
 
-            if(is_game_over()) {
-                stop_bot();
-            }
             show_board();
             check_game_over();
 
             if(e_bot_button.classList.contains('running')) {
-                bot_timeout_handle = window.setTimeout(run_bot, 10);
+                bot_timeout_handle = window.setTimeout(run_bot, 0);
             } else {
                 bot_timeout_handle = false;
             }
