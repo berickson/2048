@@ -492,8 +492,8 @@
         }
 
         var get_best_two_deep_move = function() {
-            let best_move_1_move = 0;
-            let best_move_1_score = 0;
+            let best_move_1_move = undefined;
+            let best_move_1_score = Number.NEGATIVE_INFINITY;
             for(let n_move = 0; n_move < 4; ++n_move) {
                 let min_random_score = Number.MAX_VALUE;
                 let board1 = board.copy();
@@ -533,8 +533,13 @@
             show_board();
             check_game_over();
 
+            // only allow high scores
+            if(is_game_over() && board.score < 13000) {
+                reset();
+            }
+
             if(e_bot_button.classList.contains('running')) {
-                bot_timeout_handle = window.setTimeout(run_bot, 10);
+                bot_timeout_handle = window.setTimeout(run_bot, 0);
             } else {
                 bot_timeout_handle = false;
             }
