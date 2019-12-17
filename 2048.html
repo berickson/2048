@@ -145,6 +145,7 @@
 
     </body>
     <script>
+        let bot_timeout = 0;
 
         const MoveDirection = {
             Left:0,
@@ -195,11 +196,14 @@
 
             // yields all possible random boards
             this.random_possibilities = function * () {
-                for(const t of me.blank_tiles()) {
+                blanks = Array.from(me.blank_tiles());
+                for(let i=0; i < blanks.length; ++i) {
+                    let t = blanks[i];
                     for(let n=2; n<=4; n+=2) {
                         let board = me.copy();
                         board.tiles[t.y][t.x] = n;
-                        yield board;
+                        probability = (n==2?0.9:0.1)/blanks.length;
+                        yield {board:board, probability: probability};
                     }
 
                 }
@@ -553,28 +557,16 @@
                     best_move_1_move = n_move;
                 }
 
-                for(rand_board of board1.random_possibilities()) {
+                let average_score = 0.0;
+                for(p of board1.random_possibilities()) {
+                    let rand_board = p.board;
                     let score = rand_board.move_n(rand_board.get_highest_scoring_move())
                         ? rand_board.ai_score() : -100000;
-                    sum_random += score;
-                    n_random += 1;
-
-                    if(score < min_random_score) {
-                        min_random_score = score;
-                    }
+                    average_score += p.probability * score;
                 }
-                let use_average = true;
-                if(use_average) {
-                    let average_score = sum_random/n_random;
-                    if(average_score > best_move_1_score) {
-                        best_move_1_score = average_score;
-                        best_move_1_move = n_move;
-                    }
-                } else {
-                    if(min_random_score > best_move_1_score) {
-                        best_move_1_score = min_random_score;
-                        best_move_1_move = n_move;
-                    }
+                if(average_score > best_move_1_score) {
+                    best_move_1_score = average_score;
+                    best_move_1_move = n_move;
                 }
             }
             // console.log("Best 2 move: "+ best_move_1_move);
@@ -604,7 +596,7 @@
             
 
             if(e_bot_button.classList.contains('running')) {
-                bot_timeout_handle = window.setTimeout(run_bot,  0);
+                bot_timeout_handle = window.setTimeout(run_bot,  bot_timeout);
             } else {
                 bot_timeout_handle = false;
             }
