@@ -324,11 +324,26 @@
                     }
                 }
 
-                return  me.score-100*penalty;
+                // penalize small numbers between bigger numbers
+                for(let i = 0; i < 4; ++i) {
+                    let s0 = Number(this.tiles[i][0]);
+                    let s1 = Number(this.tiles[i][1]);
+                    let s2 = Number(this.tiles[i][2]);
+                    let s3 = Number(this.tiles[i][3]);
+                    if(s0>s1 && (s1 < s2 || s1 < s3)) {
+                        penalty += 100;
+                    }
+                    if((s0>s2||s1>s2)&&s2<s3) {
+                        penalty += 100;
+                    }
+                }
+
+
+                return  me.score-10*penalty;
             }
 
             this.get_highest_scoring_move = function() {
-                let highest_score = -1;
+                let highest_score = Number.NEGATIVE_INFINITY;
                 let n_best_move = 0;
                 for (let n_move = 0; n_move < 4; ++n_move) {
                     let test_board = me.copy();
@@ -516,16 +531,16 @@
                 if(!board1.move_n(n_move)) {
                     continue;
                 }
+                if(best_move_1_move==undefined) {
+                    best_move_1_move = n_move;
+                }
+
                 for(rand_board of board1.random_possibilities()) {
-                    let score = NaN;
-                    if(!rand_board.move_n(rand_board.get_highest_scoring_move())) {
-                        score = -1000000;
-                    } else {
-                        score = rand_board.ai_score()
-                    }
+                    let score = rand_board.move_n(rand_board.get_highest_scoring_move())
+                        ? rand_board.ai_score() : -100000;
 
                     if(score < min_random_score) {
-                        min_random_score = rand_board.ai_score();
+                        min_random_score = score;
                     }
                 }
                 if(min_random_score > best_move_1_score) {
@@ -533,6 +548,7 @@
                     best_move_1_move = n_move;
                 }
             }
+            // console.log("Best 2 move: "+ best_move_1_move);
             return best_move_1_move;
         }
 
@@ -553,13 +569,13 @@
 
             // only allow high scores
             
-            if(false && is_game_over() && board.score < 13000) {
+            if(is_game_over() && board.score < 13000) {
                 reset();
             }
             
 
             if(e_bot_button.classList.contains('running')) {
-                bot_timeout_handle = window.setTimeout(run_bot, 1000);
+                bot_timeout_handle = window.setTimeout(run_bot,  0);
             } else {
                 bot_timeout_handle = false;
             }
