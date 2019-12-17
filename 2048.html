@@ -312,14 +312,30 @@
                 return move_available;
             }
 
+            // score to AI to optimize, considers 
+            // "goodness" of board
+            this.ai_score = function() {
+
+                // penalize number scores higher down
+                let penalty = 0;
+                for(let i=0; i<4; ++i) {
+                    for(let j=0; j<4; ++j) {
+                        penalty += (3-i) * this.tiles[i][j];
+                    }
+                }
+
+                return  me.score-100*penalty;
+            }
+
             this.get_highest_scoring_move = function() {
                 let highest_score = -1;
                 let n_best_move = 0;
                 for (let n_move = 0; n_move < 4; ++n_move) {
                     let test_board = me.copy();
                     if(test_board.move_n(n_move)) {
-                        if(test_board.score > highest_score) {
-                            highest_score = test_board.score;
+                        let score = test_board.ai_score();
+                        if(score > highest_score) {
+                            highest_score = score;
                             n_best_move = n_move;
                         }
                     }
@@ -482,8 +498,8 @@
             for (let n_move = 0; n_move < 4; ++n_move) {
                 let test_board = board.copy();
                 if(test_board.move_n(n_move)) {
-                    if(test_board.score > highest_score) {
-                        highest_score = test_board.score;
+                    if(test_board.ai_score() > highest_score) {
+                        highest_score = test_board.ai_score();
                         n_best_move = n_move;
                     }
                 }
@@ -501,12 +517,15 @@
                     continue;
                 }
                 for(rand_board of board1.random_possibilities()) {
+                    let score = NaN;
                     if(!rand_board.move_n(rand_board.get_highest_scoring_move())) {
-                        continue;
+                        score = -1000000;
+                    } else {
+                        score = rand_board.ai_score()
                     }
 
-                    if(rand_board.score < min_random_score) {
-                        min_random_score = rand_board.score;
+                    if(score < min_random_score) {
+                        min_random_score = rand_board.ai_score();
                     }
                 }
                 if(min_random_score > best_move_1_score) {
@@ -514,7 +533,6 @@
                     best_move_1_move = n_move;
                 }
             }
-            console.log('best move: '+best_move_1_move);
             return best_move_1_move;
         }
 
@@ -534,12 +552,14 @@
             check_game_over();
 
             // only allow high scores
-            if(is_game_over() && board.score < 13000) {
+            
+            if(false && is_game_over() && board.score < 13000) {
                 reset();
             }
+            
 
             if(e_bot_button.classList.contains('running')) {
-                bot_timeout_handle = window.setTimeout(run_bot, 0);
+                bot_timeout_handle = window.setTimeout(run_bot, 1000);
             } else {
                 bot_timeout_handle = false;
             }
