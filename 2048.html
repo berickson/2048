@@ -316,8 +316,10 @@
             // "goodness" of board
             this.ai_score = function() {
 
-                // penalize number scores higher down
+
                 let penalty = 0;
+                let bonus = 0;
+                // penalize number scores higher down
                 for(let i=0; i<4; ++i) {
                     for(let j=0; j<4; ++j) {
                         penalty += (3-i) * this.tiles[i][j];
@@ -330,16 +332,30 @@
                     let s1 = Number(this.tiles[i][1]);
                     let s2 = Number(this.tiles[i][2]);
                     let s3 = Number(this.tiles[i][3]);
-                    if(s0>s1 && (s1 < s2 || s1 < s3)) {
-                        penalty += 100;
+                    if(s1 > 0 && s0>s1 && (s1 < s2 || s1 < s3)) {
+                        penalty += 100 + i * 100/s1;
                     }
-                    if((s0>s2||s1>s2)&&s2<s3) {
-                        penalty += 100;
+                    if((s2 > 0 && s0>s2||s1>s2)&&s2<s3) {
+                        penalty += 100 + i * 100/s2;
                     }
                 }
 
-
-                return  me.score-10*penalty;
+                // highest number in the corner
+                let max = 0;
+                let max_x = 0;
+                let max_y = 0;
+                for(let i = 0 ; i < 4; ++i) {
+                    for (let j = 0; j<4; ++j) {
+                        n = me.tiles[i][j];
+                        if(n>=max) {
+                            max = n;
+                        }
+                    }
+                }
+                if(me.tiles[3][0]==max||me.tiles[3][3]==max) {
+                    bonus += max;
+                }
+                return  me.score-10*penalty+10*bonus;
             }
 
             this.get_highest_scoring_move = function() {
@@ -527,6 +543,8 @@
             let best_move_1_score = Number.NEGATIVE_INFINITY;
             for(let n_move = 0; n_move < 4; ++n_move) {
                 let min_random_score = Number.MAX_VALUE;
+                let sum_random = 0;
+                let n_random = 0;
                 let board1 = board.copy();
                 if(!board1.move_n(n_move)) {
                     continue;
@@ -538,14 +556,25 @@
                 for(rand_board of board1.random_possibilities()) {
                     let score = rand_board.move_n(rand_board.get_highest_scoring_move())
                         ? rand_board.ai_score() : -100000;
+                    sum_random += score;
+                    n_random += 1;
 
                     if(score < min_random_score) {
                         min_random_score = score;
                     }
                 }
-                if(min_random_score > best_move_1_score) {
-                    best_move_1_score = min_random_score;
-                    best_move_1_move = n_move;
+                let use_average = true;
+                if(use_average) {
+                    let average_score = sum_random/n_random;
+                    if(average_score > best_move_1_score) {
+                        best_move_1_score = average_score;
+                        best_move_1_move = n_move;
+                    }
+                } else {
+                    if(min_random_score > best_move_1_score) {
+                        best_move_1_score = min_random_score;
+                        best_move_1_move = n_move;
+                    }
                 }
             }
             // console.log("Best 2 move: "+ best_move_1_move);
@@ -569,7 +598,7 @@
 
             // only allow high scores
             
-            if(is_game_over() && board.score < 13000) {
+            if(is_game_over() && board.score < 37000) {
                 reset();
             }
             
