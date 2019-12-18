@@ -590,8 +590,11 @@
 
             // only allow high scores
             
-            if(is_game_over() && board.score < 37000) {
-                reset();
+            if(is_game_over()) {
+                console.log("bot score: "+board.score);
+                if (board.score < 37000) {
+                    reset();
+                }
             }
             
 
